@@ -8,36 +8,36 @@ import string
 import matplotlib.pyplot as plt
 
 # ----------------------------
-# CLEAN TEXT FUNCTION
+# TEXT CLEANER CLASS
 # ----------------------------
-def clean_text(text):
-    text = str(text).lower()
-    text = re.sub(r"http\S+|www.\S+", "", text)
-    text = re.sub(r"<.*?>", "", text)
-    text = re.sub(rf"[{re.escape(string.punctuation)}]", "", text)
-    text = re.sub(r"\d+", "", text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
+class TextCleaner:
+    def clean(self, text):
+        text = str(text).lower()
+        text = re.sub(r"http\S+|www.\S+", "", text)
+        text = re.sub(r"<.*?>", "", text)
+        text = re.sub(rf"[{re.escape(string.punctuation)}]", "", text)
+        text = re.sub(r"\d+", "", text)
+        text = re.sub(r"\s+", " ", text).strip()
+        return text
+
+cleaner = TextCleaner()
 
 # ----------------------------
-# LOAD PRE-TRAINED MODEL
+# LOAD TUNED PIPELINE MODEL
 # ----------------------------
 @st.cache_resource
-def load_model():
-    with open("rf_model.pkl", "rb") as f:
-        model = pickle.load(f)
-    with open("vectorizer.pkl", "rb") as f:
-        vectorizer = pickle.load(f)
-    return model, vectorizer
+def load_pipeline():
+    with open("rf_pipeline_tuned.pkl", "rb") as f:
+        pipeline = pickle.load(f)
+    return pipeline
 
-model, vectorizer = load_model()
+pipeline = load_pipeline()
 
 # ----------------------------
 # STREAMLIT APP
 # ----------------------------
-st.title("💬 Twitter Sentiment Analysis (Pre-trained Model)")
+st.title("💬 Twitter Sentiment Analysis — Tuned Random Forest Pipeline")
 
-# Upload file
 uploaded_file = st.file_uploader("Upload a CSV with a 'Text' column", type=["csv"])
 
 if uploaded_file:
@@ -46,11 +46,10 @@ if uploaded_file:
     if "Text" not in df_val.columns:
         st.error("❌ Uploaded CSV must contain a 'Text' column.")
     else:
-        df_val['clean_text'] = df_val['Text'].apply(clean_text)
+        df_val['clean_text'] = df_val['Text'].apply(cleaner.clean)
 
-        X_val = vectorizer.transform(df_val['clean_text'])
-
-        preds = model.predict(X_val)
+        # Pipeline handles vectorization and prediction
+        preds = pipeline.predict(df_val['clean_text'])
         df_val['Predicted_Sentiment'] = preds
 
         st.success("✅ Predictions complete!")
