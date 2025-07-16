@@ -2,3 +2,5 @@ rf_model.pkl
 rf_model.pkl
 rf_pipeline.pkl
 vectorizer.pkl
+rf_pipeline.pkl
+rf_pipeline_tuned.pkl
